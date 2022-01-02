@@ -1,7 +1,9 @@
+TARGET_MODULE:=tas5756
+
 ifneq ($(KERNELRELEASE),)
 # kbuild part of makefile
 
-obj-m += tas5756.o
+obj-m += $(TARGET_MODULE).o
 
 else
 # normal makefile
@@ -16,6 +18,15 @@ default:
 
 clean:
 	make -C $(KDIR) M=$(PWD) clean
+
+load:
+	insmod ./$(TARGET_MODULE).ko
+
+unload:
+	rmmod ./$(TARGET_MODULE).ko
+
+dts: my-amp-overlay.dts
+	dtc -@ -I dts -O dtb -o /boot/overlays/my-amp.dtbo my-amp-overlay.dts
 
 main.out: userspace.c
 	gcc -li2c -O -o $@ $^
