@@ -1,7 +1,7 @@
 ifneq ($(KERNELRELEASE),)
 # kbuild part of makefile
 
-obj-m += hello-1.o
+obj-m += tas5756.o
 
 else
 # normal makefile
