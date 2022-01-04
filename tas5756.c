@@ -8,8 +8,8 @@ MODULE_DESCRIPTION("Implementation of a TAS5756M driver for learning purposes");
 MODULE_AUTHOR("Clayton Watts <cletusw@gmail.com>");
 MODULE_LICENSE("Dual MIT/GPL");
 
-#define TAS5756_VOLB 61
-#define TAS5756_VOLA 62
+#define TAS5756_VOLL 61
+#define TAS5756_VOLR 62
 
 #define MAX_VOLUME_VALUE 0xFE
 
@@ -24,7 +24,7 @@ static inline unsigned int tas5756_read(struct snd_soc_component *component,
 	struct tas5756_private *tas5756 = snd_soc_component_get_drvdata(component);
 	s32 response;
 
-	response = i2c_smbus_read_byte_data(tas5756->i2c, TAS5756_VOLB);
+	response = i2c_smbus_read_byte_data(tas5756->i2c, reg);
 
 	if (response < 0) {
 		pr_info("tas5756: ERROR: Failed hw read %d\n", reg);
@@ -40,8 +40,14 @@ static int tas5756_write(struct snd_soc_component *component, unsigned int reg,
 		unsigned int value)
 {
 	struct tas5756_private *tas5756 = snd_soc_component_get_drvdata(component);
+	s32 response;
 
-	i2c_smbus_write_byte_data(tas5756->i2c, TAS5756_VOLB, value);
+	response = i2c_smbus_write_byte_data(tas5756->i2c, reg, value);
+
+	if (response < 0) {
+		pr_info("tas5756: ERROR: Failed hw write %d\n value 0x%x\n", reg, value);
+		return -EIO;
+	}
 
 	pr_info("tas5756: hw write %d value 0x%x\n", reg, value);
 
@@ -49,7 +55,7 @@ static int tas5756_write(struct snd_soc_component *component, unsigned int reg,
 }
 
 static const struct snd_kcontrol_new tas5756_snd_controls[] = {
-	SOC_SINGLE("Hardware Master Playback Volume", TAS5756_VOLB, 0, MAX_VOLUME_VALUE, 1),
+	SOC_DOUBLE_R("Hardware Master Playback Volume", TAS5756_VOLL, TAS5756_VOLR, 0, MAX_VOLUME_VALUE, 1),
 };
 
 static const struct snd_soc_dapm_widget tas5756_dapm_widgets[] = {
