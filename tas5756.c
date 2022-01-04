@@ -4,6 +4,7 @@
 #include <linux/module.h>
 #include <linux/regmap.h>
 #include <sound/soc.h>
+#include <sound/tlv.h>
 
 MODULE_DESCRIPTION("Implementation of a TAS5756M driver for learning purposes");
 MODULE_AUTHOR("Clayton Watts <cletusw@gmail.com>");
@@ -14,7 +15,9 @@ MODULE_LICENSE("Dual MIT/GPL");
 #define TAS5756_VOLR 62
 
 #define TAS5756_MAX_REGISTER TAS5756_VOLR
-#define TAS5756_MAX_VOLUME_VALUE 0xFE
+#define TAS5756_MAX_VOLUME_VALUE 0xFF
+
+static const DECLARE_TLV_DB_SCALE(volume_tlv, -10350, 50, 1 /* mute = true */);
 
 /* Private data for the TAS5756 */
 struct tas5756_private {
@@ -46,7 +49,14 @@ static bool tas5756_writeable_register(struct device *dev, unsigned int reg)
 }
 
 static const struct snd_kcontrol_new tas5756_snd_controls[] = {
-	SOC_DOUBLE_R("Hardware Master Playback Volume", TAS5756_VOLL, TAS5756_VOLR, 0, TAS5756_MAX_VOLUME_VALUE, 1),
+	SOC_DOUBLE_R_TLV(
+			"Hardware Master Playback Volume",
+			TAS5756_VOLL,
+			TAS5756_VOLR,
+			/* xshift = */ 0,
+			TAS5756_MAX_VOLUME_VALUE,
+			/* invert = */ 1,
+			volume_tlv),
 };
 
 static const struct snd_soc_dapm_widget tas5756_dapm_widgets[] = {
