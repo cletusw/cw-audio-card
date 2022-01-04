@@ -10,10 +10,49 @@
             #address-cells = <1>;
             #size-cells = <0>;
 
-            my-amp@76 {
+            volume: tas5756@4c {
                 status = "okay";
                 compatible = "ti,tas5756";
                 reg = <0x4c>;
+            };
+
+            dac: pcm5122@4d {
+				#sound-dai-cells = <0>;
+				compatible = "ti,pcm5122";
+				reg = <0x4d>;
+				AVDD-supply = <&vdd_3v3_reg>;
+				DVDD-supply = <&vdd_3v3_reg>;
+				CPVDD-supply = <&vdd_3v3_reg>;
+				status = "okay";
+			};
+        };
+    };
+
+    fragment@1 {
+        target = <&i2s>;
+        __overlay__ {
+            status = "okay";
+        };
+    };
+
+    fragment@2 {
+        target = <&sound>;
+        __overlay__ {
+            compatible = "simple-audio-card";
+            i2s_controller = <&i2s>;
+            status = "okay";
+            simple-audio-card,name = "my-cool-audio-card";
+            simple-audio-card,format = "i2s";
+            simple-audio-card,bitclock-master = <&dailink0_master>;
+            simple-audio-card,frame-master = <&dailink0_master>;
+
+            simple-audio-card,aux-devs = <&volume>;
+
+            dailink0_master: simple-audio-card,cpu {
+                sound-dai = <&i2s>;
+            };
+            simple-audio-card,codec {
+                sound-dai = <&dac>;
             };
         };
     };
