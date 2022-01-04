@@ -15,17 +15,25 @@ MODULE_LICENSE("Dual MIT/GPL");
 
 /* Private data for the TAS5756 */
 struct tas5756_private {
-	unsigned int cool_data;
+	struct i2c_client *i2c;
 };
 
 static inline unsigned int tas5756_read(struct snd_soc_component *component,
 	unsigned int reg)
 {
 	struct tas5756_private *tas5756 = snd_soc_component_get_drvdata(component);
+	s32 response;
 
-	pr_info("tas5756: hw read %d value 0x%x\n", reg, tas5756->cool_data);
+	response = i2c_smbus_read_byte_data(tas5756->i2c, TAS5756_VOLB);
 
-	return tas5756->cool_data;
+	if (response < 0) {
+		pr_info("tas5756: ERROR: Failed hw read %d\n", reg);
+		return -EIO;
+	}
+
+	pr_info("tas5756: hw read %d value 0x%x\n", reg, response);
+
+	return response;
 }
 
 static int tas5756_write(struct snd_soc_component *component, unsigned int reg,
@@ -33,9 +41,9 @@ static int tas5756_write(struct snd_soc_component *component, unsigned int reg,
 {
 	struct tas5756_private *tas5756 = snd_soc_component_get_drvdata(component);
 
-	pr_info("tas5756: hw write %d value 0x%x\n", reg, value);
+	i2c_smbus_write_byte_data(tas5756->i2c, TAS5756_VOLB, value);
 
-	tas5756->cool_data = value;
+	pr_info("tas5756: hw write %d value 0x%x\n", reg, value);
 
 	return 0;
 }
@@ -77,12 +85,12 @@ static int tas5756_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	pr_info("tas5756: Hello from driver v3, cletusw!\n");
 
 	tas5756 = devm_kzalloc(&client->dev, sizeof(*tas5756), GFP_KERNEL);
-	if (!tas5756)
+	if (!tas5756) {
 		return -ENOMEM;
+	}
 
 	i2c_set_clientdata(client, tas5756);
-
-	tas5756->cool_data = 3;
+	tas5756->i2c = client;
 
 	return devm_snd_soc_register_component(
 			&client->dev, &soc_component_dev_tas5756, NULL, 0);
