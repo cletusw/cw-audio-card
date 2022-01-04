@@ -11,44 +11,39 @@ MODULE_AUTHOR("Clayton Watts <cletusw@gmail.com>");
 MODULE_LICENSE("Dual MIT/GPL");
 
 // TAS5756 actually uses multiple pages of registers. Here we just assume page 0
+#define TAS5756_CLOCK_MISSING_DETECTION_PERIOD 44
 #define TAS5756_VOLL 61
 #define TAS5756_VOLR 62
 
 #define TAS5756_MAX_REGISTER TAS5756_VOLR
 #define TAS5756_MAX_VOLUME_VALUE 0xFF
 
-static const DECLARE_TLV_DB_SCALE(volume_tlv, -10350, 50, 1 /* mute = true */);
-
 /* Private data for the TAS5756 */
 struct tas5756_private {
 	struct regmap *regmap;
 };
 
-static bool tas5756_readable_register(struct device *dev, unsigned int reg)
-{
-	pr_info("tas5756: hw read %d", reg);
-
-	switch (reg) {
-	case TAS5756_VOLL ... TAS5756_VOLR:
-		return true;
-	default:
-		return false;
-	}
-}
-
-static bool tas5756_writeable_register(struct device *dev, unsigned int reg)
-{
-	pr_info("tas5756: hw write %d", reg);
-
-	switch (reg) {
-	case TAS5756_VOLL ... TAS5756_VOLR:
-		return true;
-	default:
-		return false;
-	}
-}
+static const DECLARE_TLV_DB_SCALE(volume_tlv, -10350, 50, 1 /* mute = true */);
+// Implemented as an enum just for practice
+static const char * const tas5756_clock_missing_detection_period[] = {
+	"1 second",
+	"2 seconds",
+	"3 seconds",
+	"4 seconds",
+	"5 seconds",
+	"6 seconds",
+	"7 seconds",
+	"8 seconds",
+};
+static const struct soc_enum tas5756_clock_missing_detection_period_enum =
+	SOC_ENUM_SINGLE(
+			TAS5756_CLOCK_MISSING_DETECTION_PERIOD,
+			/* xshift = */ 0,
+			ARRAY_SIZE(tas5756_clock_missing_detection_period),
+			tas5756_clock_missing_detection_period);
 
 static const struct snd_kcontrol_new tas5756_snd_controls[] = {
+	SOC_ENUM("Clock Missing Detection Period", tas5756_clock_missing_detection_period_enum),
 	SOC_DOUBLE_R_TLV(
 			"Hardware Master Playback Volume",
 			TAS5756_VOLL,
@@ -77,6 +72,30 @@ static const struct snd_soc_component_driver soc_component_dev_tas5756 = {
 	.endianness = 1,
 	.non_legacy_dai_naming = 1,
 };
+
+static bool tas5756_readable_register(struct device *dev, unsigned int reg)
+{
+	pr_info("tas5756: hw read %d", reg);
+
+	switch (reg) {
+	case TAS5756_CLOCK_MISSING_DETECTION_PERIOD ... TAS5756_VOLR:
+		return true;
+	default:
+		return false;
+	}
+}
+
+static bool tas5756_writeable_register(struct device *dev, unsigned int reg)
+{
+	pr_info("tas5756: hw write %d", reg);
+
+	switch (reg) {
+	case TAS5756_CLOCK_MISSING_DETECTION_PERIOD ... TAS5756_VOLR:
+		return true;
+	default:
+		return false;
+	}
+}
 
 static const struct regmap_config tas5756_regmap = {
 	.reg_bits = 8,
