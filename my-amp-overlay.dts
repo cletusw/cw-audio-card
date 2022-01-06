@@ -14,6 +14,7 @@
                 status = "okay";
                 compatible = "ti,tas5756";
                 reg = <0x4c>;
+                sound-name-prefix = "vol";
             };
 
             dac: pcm5122@4d {
@@ -24,6 +25,7 @@
 				DVDD-supply = <&vdd_3v3_reg>;
 				CPVDD-supply = <&vdd_3v3_reg>;
 				status = "okay";
+                sound-name-prefix = "dac";
 			};
         };
     };
@@ -51,10 +53,14 @@
             simple-audio-card,widgets =
                 "Line", "Aux Jack",
                 "Speaker", "External Speaker";
+            // simple-audio-card,prefix = "mycard";
             simple-audio-card,routing =
-                "AUXIN", "Aux Jack",
-                "DACIN", "OUTL",
-                "External Speaker", "MUXOUT";
+                "vol AUXINL", "Aux Jack",
+                "vol AUXINR", "Aux Jack",
+                "vol DACINL", "dac OUTL",
+                "vol DACINR", "dac OUTR",
+                "External Speaker", "vol MUXOUTL",
+                "External Speaker", "vol MUXOUTR";
 
             dailink0_master: simple-audio-card,cpu {
                 sound-dai = <&i2s>;

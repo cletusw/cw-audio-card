@@ -51,13 +51,18 @@ static const struct soc_enum tas5756_fake_source_mux_enum =
 static const struct snd_kcontrol_new tas5756_fake_source_mux =
 	SOC_DAPM_ENUM("SOURCEMUX", tas5756_fake_source_mux_enum);
 
+static int corgi_amp_event(struct snd_soc_dapm_widget *w, struct snd_kcontrol *k, int event) {
+	pr_info("tas5756: amp DAPM event!");
+	return 0;
+}
+
 static const struct snd_soc_dapm_widget tas5756_dapm_widgets[] = {
 	SND_SOC_DAPM_INPUT("DACINL"),
 	SND_SOC_DAPM_INPUT("DACINR"),
 	SND_SOC_DAPM_INPUT("AUXINL"),
 	SND_SOC_DAPM_INPUT("AUXINR"),
 
-	SND_SOC_DAPM_MUX("Source select", SND_SOC_NOPM, 0, 0, &tas5756_fake_source_mux),
+	SND_SOC_DAPM_MUX_E("Source select", SND_SOC_NOPM, 0, 0, &tas5756_fake_source_mux, corgi_amp_event, 0x3F),
 
 	SND_SOC_DAPM_OUTPUT("MUXOUTL"),
 	SND_SOC_DAPM_OUTPUT("MUXOUTR"),
