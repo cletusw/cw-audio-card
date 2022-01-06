@@ -4,6 +4,7 @@
 #include <linux/module.h>
 #include <linux/regmap.h>
 #include <sound/soc.h>
+#include <sound/soc-dapm.h>
 #include <sound/tlv.h>
 
 MODULE_DESCRIPTION("Implementation of a TAS5756M driver for learning purposes");
@@ -24,26 +25,8 @@ struct tas5756_private {
 };
 
 static const DECLARE_TLV_DB_SCALE(volume_tlv, -10350, 50, 1 /* mute = true */);
-// Implemented as an enum just for practice
-static const char * const tas5756_clock_missing_detection_period[] = {
-	"1 second",
-	"2 seconds",
-	"3 seconds",
-	"4 seconds",
-	"5 seconds",
-	"6 seconds",
-	"7 seconds",
-	"8 seconds",
-};
-static const struct soc_enum tas5756_clock_missing_detection_period_enum =
-	SOC_ENUM_SINGLE(
-			TAS5756_CLOCK_MISSING_DETECTION_PERIOD,
-			/* xshift = */ 0,
-			ARRAY_SIZE(tas5756_clock_missing_detection_period),
-			tas5756_clock_missing_detection_period);
 
 static const struct snd_kcontrol_new tas5756_snd_controls[] = {
-	SOC_ENUM("Clock Missing Detection Period", tas5756_clock_missing_detection_period_enum),
 	SOC_DOUBLE_R_TLV(
 			"Hardware Master Playback Volume",
 			TAS5756_VOLL,
@@ -54,10 +37,40 @@ static const struct snd_kcontrol_new tas5756_snd_controls[] = {
 			volume_tlv),
 };
 
+// Mux practice
+static const char * const tas5756_fake_source_mux_text[] = {
+	"Pi",
+	"Aux",
+};
+static const struct soc_enum tas5756_fake_source_mux_enum =
+	SOC_ENUM_SINGLE(
+			TAS5756_CLOCK_MISSING_DETECTION_PERIOD,
+			/* xshift = */ 0,
+			ARRAY_SIZE(tas5756_fake_source_mux_text),
+			tas5756_fake_source_mux_text);
+static const struct snd_kcontrol_new tas5756_fake_source_mux =
+	SOC_DAPM_ENUM("SOURCEMUX", tas5756_fake_source_mux_enum);
+
 static const struct snd_soc_dapm_widget tas5756_dapm_widgets[] = {
+	SND_SOC_DAPM_INPUT("DACINL"),
+	SND_SOC_DAPM_INPUT("DACINR"),
+	SND_SOC_DAPM_INPUT("AUXINL"),
+	SND_SOC_DAPM_INPUT("AUXINR"),
+
+	SND_SOC_DAPM_MUX("Source select", SND_SOC_NOPM, 0, 0, &tas5756_fake_source_mux),
+
+	SND_SOC_DAPM_OUTPUT("MUXOUTL"),
+	SND_SOC_DAPM_OUTPUT("MUXOUTR"),
 };
 
 static const struct snd_soc_dapm_route tas5756_routes[] = {
+	{ "Source select", NULL, "DACINL" },
+	{ "Source select", NULL, "DACINR" },
+	{ "Source select", NULL, "AUXINL" },
+	{ "Source select", NULL, "AUXINR" },
+
+	{ "MUXOUTL", NULL, "Source select" },
+	{ "MUXOUTR", NULL, "Source select" },
 };
 
 static const struct snd_soc_component_driver soc_component_dev_tas5756 = {

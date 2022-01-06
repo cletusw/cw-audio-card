@@ -48,6 +48,14 @@
 
             simple-audio-card,aux-devs = <&volume>;
 
+            simple-audio-card,widgets =
+                "Line", "Aux Jack",
+                "Speaker", "External Speaker";
+            simple-audio-card,routing =
+                "AUXIN", "Aux Jack",
+                "DACIN", "OUTL",
+                "External Speaker", "MUXOUT";
+
             dailink0_master: simple-audio-card,cpu {
                 sound-dai = <&i2s>;
             };
