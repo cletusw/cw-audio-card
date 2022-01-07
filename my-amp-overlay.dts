@@ -53,7 +53,6 @@
             simple-audio-card,widgets =
                 "Line", "Aux Jack",
                 "Speaker", "External Speaker";
-            // simple-audio-card,prefix = "mycard";
             simple-audio-card,routing =
                 "vol AUXINL", "Aux Jack",
                 "vol AUXINR", "Aux Jack",

@@ -51,8 +51,27 @@ static const struct soc_enum tas5756_fake_source_mux_enum =
 static const struct snd_kcontrol_new tas5756_fake_source_mux =
 	SOC_DAPM_ENUM("SOURCEMUX", tas5756_fake_source_mux_enum);
 
-static int corgi_amp_event(struct snd_soc_dapm_widget *w, struct snd_kcontrol *k, int event) {
-	pr_info("tas5756: amp DAPM event!");
+static int tas5756_dapm_event(struct snd_soc_dapm_widget *w, struct snd_kcontrol *k, int event) {
+	// pr_info("tas5756: pre DAPM event: %d", event);
+	struct tas5756_private *tas5756 = snd_soc_component_get_drvdata(w->dapm->component);
+	int ret = 0;
+
+	switch (event) {
+	case SND_SOC_DAPM_PRE_PMU:
+		pr_info("tas5756: Change mux to DAC");
+		// pr_info("tas5756: To DAC priv %p, regmap %p\n", (void*)tas5756, (void*)tas5756->regmap);
+		ret = regmap_write(tas5756->regmap, TAS5756_CLOCK_MISSING_DETECTION_PERIOD, 4);
+		break;
+	case SND_SOC_DAPM_PRE_PMD:
+		pr_info("tas5756: Change mux to AUX");
+		// pr_info("tas5756: To AUX priv %p, regmap %p\n", (void*)tas5756, (void*)tas5756->regmap);
+		ret = regmap_write(tas5756->regmap, TAS5756_CLOCK_MISSING_DETECTION_PERIOD, 5);
+		break;
+	}
+	if (ret < 0) {
+		pr_info("tas5756: Error changing mux: %d", ret);
+		return -EIO;
+	}
 	return 0;
 }
 
@@ -62,15 +81,17 @@ static const struct snd_soc_dapm_widget tas5756_dapm_widgets[] = {
 	SND_SOC_DAPM_INPUT("AUXINL"),
 	SND_SOC_DAPM_INPUT("AUXINR"),
 
-	SND_SOC_DAPM_MUX_E("Source select", SND_SOC_NOPM, 0, 0, &tas5756_fake_source_mux, corgi_amp_event, 0x3F),
+	SND_SOC_DAPM_PRE("DAC DAPM listener", tas5756_dapm_event),
+	SND_SOC_DAPM_MUX("Source select", SND_SOC_NOPM, 0, 0, &tas5756_fake_source_mux),
 
 	SND_SOC_DAPM_OUTPUT("MUXOUTL"),
 	SND_SOC_DAPM_OUTPUT("MUXOUTR"),
 };
 
 static const struct snd_soc_dapm_route tas5756_routes[] = {
-	{ "Source select", NULL, "DACINL" },
-	{ "Source select", NULL, "DACINR" },
+	{ "DAC DAPM listener", NULL, "DACINL" },
+	{ "DAC DAPM listener", NULL, "DACINR" },
+	{ "Source select", NULL, "DAC DAPM listener" },
 	{ "Source select", NULL, "AUXINL" },
 	{ "Source select", NULL, "AUXINR" },
 
@@ -133,7 +154,7 @@ static int tas5756_i2c_probe(struct i2c_client *client, const struct i2c_device_
 	/* To tail ("wait on") the logs: */
 	/* dmesg -w */
 	/* (optionally use `-l info` for just info level logs) */
-	pr_info("tas5756: Hello from driver v3!\n");
+	pr_info("tas5756: Hello from driver v6!\n");
 
 	tas5756 = devm_kzalloc(&client->dev, sizeof(*tas5756), GFP_KERNEL);
 	if (!tas5756) {
@@ -148,6 +169,9 @@ static int tas5756_i2c_probe(struct i2c_client *client, const struct i2c_device_
 		pr_info("tas5756: regmap_init() failed with: %d\n", return_value);
 		return return_value;
 	}
+
+	// pr_info("tas5756: Probe priv %p, regmap %p\n", (void*)tas5756, (void*)tas5756->regmap);
+	// regmap_write(tas5756->regmap, TAS5756_CLOCK_MISSING_DETECTION_PERIOD, 6);
 
 	return devm_snd_soc_register_component(
 			&client->dev, &soc_component_dev_tas5756, NULL, 0);
