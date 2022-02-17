@@ -12,44 +12,46 @@ MODULE_AUTHOR("Clayton Watts <cletusw@gmail.com>");
 MODULE_LICENSE("Dual MIT/GPL");
 
 // BD6490FV actually uses multiple pages of registers. Here we just assume page 0
-#define BD6490FV_CLOCK_MISSING_DETECTION_PERIOD 44
-#define BD6490FV_VOLL 61
-#define BD6490FV_VOLR 62
+#define BD6490FV_INPUT_SELECTOR 4
+#define BD6490FV_VOLL 21
+#define BD6490FV_VOLR 22
 
 #define BD6490FV_MAX_REGISTER BD6490FV_VOLR
-#define BD6490FV_MAX_VOLUME_VALUE 0xFF
+#define BD6490FV_MAX_VOLUME_VALUE 0xD7	# Inverted so this is actually lowest volume
+#define BD6490FV_MIN_VOLUME_VALUE 0x80	# Inverted so this is actually highest volume
 
 /* Private data for the BD6490FV */
 struct bd6490fv_private {
 	struct regmap *regmap;
 };
 
-static const DECLARE_TLV_DB_SCALE(volume_tlv, -10350, 50, 1 /* mute = true */);
+static const DECLARE_TLV_DB_SCALE(volume_tlv, -8700, 100, 0 /* mute = false */);
 
 static const struct snd_kcontrol_new bd6490fv_snd_controls[] = {
-	SOC_DOUBLE_R_TLV(
+	SOC_DOUBLE_R_RANGE_TLV(
 			"Hardware Master Playback Volume",
 			BD6490FV_VOLL,
 			BD6490FV_VOLR,
 			/* xshift = */ 0,
+			BD6490FV_MIN_VOLUME_VALUE,
 			BD6490FV_MAX_VOLUME_VALUE,
 			/* invert = */ 1,
 			volume_tlv),
 };
 
-// Mux practice
-static const char * const bd6490fv_fake_source_mux_text[] = {
+// Input selector
+static const char * const bd6490fv_input_selector_text[] = {
 	"Pi",
 	"Aux",
 };
-static const struct soc_enum bd6490fv_fake_source_mux_enum =
+static const struct soc_enum bd6490fv_input_selector_enum =
 	SOC_ENUM_SINGLE(
-			BD6490FV_CLOCK_MISSING_DETECTION_PERIOD,
+			BD6490FV_INPUT_SELECTOR,
 			/* xshift = */ 0,
-			ARRAY_SIZE(bd6490fv_fake_source_mux_text),
-			bd6490fv_fake_source_mux_text);
-static const struct snd_kcontrol_new bd6490fv_fake_source_mux =
-	SOC_DAPM_ENUM("SOURCEMUX", bd6490fv_fake_source_mux_enum);
+			ARRAY_SIZE(bd6490fv_input_selector_text),
+			bd6490fv_input_selector_text);
+static const struct snd_kcontrol_new bd6490fv_input_selector =
+	SOC_DAPM_ENUM("SOURCEMUX", bd6490fv_input_selector_enum);
 
 static int bd6490fv_dapm_event(struct snd_soc_dapm_widget *w, struct snd_kcontrol *k, int event) {
 	// pr_info("bd6490fv: pre DAPM event: %d", event);
@@ -60,12 +62,12 @@ static int bd6490fv_dapm_event(struct snd_soc_dapm_widget *w, struct snd_kcontro
 	case SND_SOC_DAPM_PRE_PMU:
 		pr_info("bd6490fv: Change mux to DAC");
 		// pr_info("bd6490fv: To DAC priv %p, regmap %p\n", (void*)bd6490fv, (void*)bd6490fv->regmap);
-		ret = regmap_write(bd6490fv->regmap, BD6490FV_CLOCK_MISSING_DETECTION_PERIOD, 4);
+		ret = regmap_write(bd6490fv->regmap, BD6490FV_INPUT_SELECTOR, 4);
 		break;
 	case SND_SOC_DAPM_PRE_PMD:
 		pr_info("bd6490fv: Change mux to AUX");
 		// pr_info("bd6490fv: To AUX priv %p, regmap %p\n", (void*)bd6490fv, (void*)bd6490fv->regmap);
-		ret = regmap_write(bd6490fv->regmap, BD6490FV_CLOCK_MISSING_DETECTION_PERIOD, 5);
+		ret = regmap_write(bd6490fv->regmap, BD6490FV_INPUT_SELECTOR, 5);
 		break;
 	}
 	if (ret < 0) {
@@ -82,7 +84,7 @@ static const struct snd_soc_dapm_widget bd6490fv_dapm_widgets[] = {
 	SND_SOC_DAPM_INPUT("AUXINR"),
 
 	SND_SOC_DAPM_PRE("DAC DAPM listener", bd6490fv_dapm_event),
-	SND_SOC_DAPM_MUX("Source select", SND_SOC_NOPM, 0, 0, &bd6490fv_fake_source_mux),
+	SND_SOC_DAPM_MUX("Source select", SND_SOC_NOPM, 0, 0, &bd6490fv_input_selector),
 
 	SND_SOC_DAPM_OUTPUT("MUXOUTL"),
 	SND_SOC_DAPM_OUTPUT("MUXOUTR"),
@@ -117,7 +119,7 @@ static bool bd6490fv_readable_register(struct device *dev, unsigned int reg)
 	pr_info("bd6490fv: hw read %d", reg);
 
 	switch (reg) {
-	case BD6490FV_CLOCK_MISSING_DETECTION_PERIOD ... BD6490FV_VOLR:
+	case BD6490FV_INPUT_SELECTOR ... BD6490FV_VOLR:
 		return true;
 	default:
 		return false;
@@ -129,7 +131,7 @@ static bool bd6490fv_writeable_register(struct device *dev, unsigned int reg)
 	pr_info("bd6490fv: hw write %d", reg);
 
 	switch (reg) {
-	case BD6490FV_CLOCK_MISSING_DETECTION_PERIOD ... BD6490FV_VOLR:
+	case BD6490FV_INPUT_SELECTOR ... BD6490FV_VOLR:
 		return true;
 	default:
 		return false;
@@ -171,7 +173,7 @@ static int bd6490fv_i2c_probe(struct i2c_client *client, const struct i2c_device
 	}
 
 	// pr_info("bd6490fv: Probe priv %p, regmap %p\n", (void*)bd6490fv, (void*)bd6490fv->regmap);
-	// regmap_write(bd6490fv->regmap, BD6490FV_CLOCK_MISSING_DETECTION_PERIOD, 6);
+	// regmap_write(bd6490fv->regmap, BD6490FV_INPUT_SELECTOR, 6);
 
 	return devm_snd_soc_register_component(
 			&client->dev, &soc_component_dev_bd6490fv, NULL, 0);

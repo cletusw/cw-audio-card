@@ -10,12 +10,12 @@
             #address-cells = <1>;
             #size-cells = <0>;
 
-            volume: bd6490fv@40 {
-                status = "okay";
-                compatible = "ti,bd6490fv";
-                reg = <0x40>;
-                sound-name-prefix = "vol";
-            };
+            // volume: bd6490fv@40 {
+            //     status = "okay";
+            //     compatible = "ti,bd6490fv";
+            //     reg = <0x40>;
+            //     sound-name-prefix = "vol";
+            // };
 
             dac: pcm5122@4d {
 				#sound-dai-cells = <0>;
@@ -48,18 +48,18 @@
             simple-audio-card,bitclock-master = <&dailink0_master>;
             simple-audio-card,frame-master = <&dailink0_master>;
 
-            simple-audio-card,aux-devs = <&volume>;
+            // simple-audio-card,aux-devs = <&volume>;
 
-            simple-audio-card,widgets =
-                "Line", "Aux Jack",
-                "Speaker", "External Speaker";
-            simple-audio-card,routing =
-                "vol AUXINL", "Aux Jack",
-                "vol AUXINR", "Aux Jack",
-                "vol DACINL", "dac OUTL",
-                "vol DACINR", "dac OUTR",
-                "External Speaker", "vol MUXOUTL",
-                "External Speaker", "vol MUXOUTR";
+            // simple-audio-card,widgets =
+            //     "Line", "Aux Jack",
+            //     "Speaker", "External Speaker";
+            // simple-audio-card,routing =
+            //     "vol AUXINL", "Aux Jack",
+            //     "vol AUXINR", "Aux Jack",
+            //     "vol DACINL", "dac OUTL",
+            //     "vol DACINR", "dac OUTR",
+            //     "External Speaker", "vol MUXOUTL",
+            //     "External Speaker", "vol MUXOUTR";
 
             dailink0_master: simple-audio-card,cpu {
                 sound-dai = <&i2s>;
