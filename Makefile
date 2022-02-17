@@ -1,4 +1,4 @@
-TARGET_MODULE:=tas5756
+TARGET_MODULE:=bd3490fv
 
 ifneq ($(KERNELRELEASE),)
 # kbuild part of makefile
