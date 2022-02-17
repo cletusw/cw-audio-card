@@ -28,10 +28,4 @@ unload:
 dts: my-amp-overlay.dts
 	dtc -@ -I dts -O dtb -o /boot/overlays/my-amp.dtbo my-amp-overlay.dts
 
-main.out: userspace.c
-	gcc -li2c -O -o $@ $^
-
-run: main.out
-	./$<
-
 endif

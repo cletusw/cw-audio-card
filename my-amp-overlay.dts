@@ -10,10 +10,10 @@
             #address-cells = <1>;
             #size-cells = <0>;
 
-            volume: tas5756@4c {
+            volume: bd6490fv@40 {
                 status = "okay";
-                compatible = "ti,tas5756";
-                reg = <0x4c>;
+                compatible = "ti,bd6490fv";
+                reg = <0x40>;
                 sound-name-prefix = "vol";
             };
 
