@@ -1,6 +1,12 @@
 # bd6490fv-driver
 Raspberry Pi (Linux) driver for a BD6490FV
 
+## Setup
+
+```sh
+sudo apt install build-essential
+```
+
 ## Usage
 
 ```sh
