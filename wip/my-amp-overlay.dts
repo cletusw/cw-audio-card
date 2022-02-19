@@ -1,0 +1,80 @@
+// Definitions for HiFiBerry DAC+
+/dts-v1/;
+/plugin/;
+
+/ {
+	compatible = "brcm,bcm2835";
+
+	fragment@0 {
+		target-path = "/";
+		__overlay__ {
+			// https://github.com/raspberrypi/linux/blob/7fb9d006d3ff3baf2e205e0c85c4e4fd0a64fcd0/drivers/clk/clk-hifiberry-dacpro.c
+			dacpro_osc: dacpro_osc {
+				compatible = "hifiberry,dacpro-clk";
+				#clock-cells = <0>;
+			};
+		};
+	};
+
+	fragment@1 {
+		target = <&i2s>;
+		__overlay__ {
+			status = "okay";
+		};
+	};
+
+	fragment@2 {
+		target = <&i2c1>;
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <0>;
+			status = "okay";
+
+			// https://github.com/raspberrypi/linux/blob/rpi-5.10.y/sound/soc/codecs/pcm512x.h
+			// https://github.com/raspberrypi/linux/blob/rpi-5.10.y/sound/soc/codecs/pcm512x.c
+			pcm5122: pcm5122@4d {
+				#sound-dai-cells = <0>;
+				compatible = "ti,pcm5122";
+				reg = <0x4d>;
+				clocks = <&dacpro_osc>;
+				AVDD-supply = <&vdd_3v3_reg>;
+				DVDD-supply = <&vdd_3v3_reg>;
+				CPVDD-supply = <&vdd_3v3_reg>;
+				status = "okay";
+			};
+		};
+	};
+
+	fragment@3 {
+		target = <&sound>;
+		hifiberry_dacplus: __overlay__ {
+			// compatible = "hifiberry,hifiberry-dacplus";
+			// https://www.kernel.org/doc/Documentation/devicetree/bindings/sound/simple-card.txt
+			// https://github.com/raspberrypi/linux/blob/e52f8c710b44e07490147bf202e1b72f97fcefa1/sound/soc/generic/simple-card.c#L698
+			compatible = "simple-audio-card";
+			i2s-controller = <&i2s>;
+			status = "okay";
+
+			simple-audio-card,name = "My Amp DAC";
+			simple-audio-card,format = "i2s";
+			simple-audio-card,bitclock-master = <&sndcodec>;
+			simple-audio-card,frame-master = <&sndcodec>;
+			simple-audio-card,mclk-fs = <512>;
+
+			simple-audio-card,cpu {
+				sound-dai = <&i2s>;
+			};
+
+			sndcodec: simple-audio-card,codec {
+				sound-dai = <&pcm5122>;
+			};
+		};
+	};
+
+	// __overrides__ {
+	// 	24db_digital_gain =
+	// 		<&hifiberry_dacplus>,"hifiberry,24db_digital_gain?";
+	// 	slave = <&hifiberry_dacplus>,"hifiberry-dacplus,slave?";
+	// 	leds_off = <&hifiberry_dacplus>,"hifiberry-dacplus,leds_off?";
+	// };
+};
