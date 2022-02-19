@@ -43,7 +43,7 @@
             compatible = "simple-audio-card";
             i2s_controller = <&i2s>;
             status = "okay";
-            simple-audio-card,name = "my-cool-audio-card";
+            simple-audio-card,name = "cw-audio-card";
             simple-audio-card,format = "i2s";
             simple-audio-card,bitclock-master = <&dailink0_master>;
             simple-audio-card,frame-master = <&dailink0_master>;
