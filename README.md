@@ -4,7 +4,7 @@ Raspberry Pi (Linux) driver for a BD6490FV
 ## Setup
 
 ```sh
-sudo apt install build-essential
+sudo apt install build-essential device-tree-compiler
 ```
 
 ## Usage
