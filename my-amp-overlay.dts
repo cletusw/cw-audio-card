@@ -37,7 +37,22 @@
         };
     };
 
+    // https://www.kernel.org/doc/Documentation/devicetree/bindings/pinctrl/brcm,bcm2835-gpio.txt
     fragment@2 {
+        target = <&gpio>;
+        __overlay__ {
+            amp_gpio: amp_gpio {
+                // !amp_enable !amp_mute !amp_error !amp_clip
+                brcm,pins = <4 17 22 27>;
+                // none, none, pullup, pullup
+                brcm,pull = <0 0 2 2>;
+                // out, out, in, in
+                brcm,function = <1 1 0 0>;
+            };
+        };
+    };
+
+    fragment@3 {
         target = <&sound>;
         __overlay__ {
             compatible = "simple-audio-card";
@@ -60,6 +75,9 @@
             //     "vol DACINR", "dac OUTR",
             //     "External Speaker", "vol MUXOUTL",
             //     "External Speaker", "vol MUXOUTR";
+
+            pinctrl-names = "default";
+            pinctrl-0 = <&amp_gpio>;
 
             dailink0_master: simple-audio-card,cpu {
                 sound-dai = <&i2s>;
