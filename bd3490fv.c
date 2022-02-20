@@ -12,9 +12,9 @@ MODULE_AUTHOR("Clayton Watts <cletusw@gmail.com>");
 MODULE_LICENSE("Dual MIT/GPL");
 
 // BD3490FV actually uses multiple pages of registers. Here we just assume page 0
-#define BD3490FV_INPUT_SELECTOR 4
-#define BD3490FV_VOLL 21
-#define BD3490FV_VOLR 22
+#define BD3490FV_INPUT_SELECTOR 0x4
+#define BD3490FV_VOLL 0x21
+#define BD3490FV_VOLR 0x22
 
 #define BD3490FV_MAX_REGISTER BD3490FV_VOLR
 // TODO: Figure out how to handle mute value, 0xFF
