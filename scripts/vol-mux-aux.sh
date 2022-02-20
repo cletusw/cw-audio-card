@@ -1,0 +1,3 @@
+#!/bin/bash
+
+i2cset -f -y 1 0x40 0x04 0x00
