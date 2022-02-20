@@ -11,8 +11,8 @@
             #size-cells = <0>;
 			status = "okay";
 
-            volume: bd6490fv@40 {
-                compatible = "ti,bd6490fv";
+            volume: bd3490fv@40 {
+                compatible = "ti,bd3490fv";
                 reg = <0x40>;
                 status = "okay";
                 sound-name-prefix = "vol";
