@@ -44,8 +44,8 @@
             amp_gpio: amp_gpio {
                 // !amp_enable !amp_mute !amp_error !amp_clip
                 brcm,pins = <4 17 22 27>;
-                // none, none, pullup, pullup
-                brcm,pull = <0 0 2 2>;
+                // pullup, pulldown, pullup, pullup
+                brcm,pull = <2 1 2 2>;
                 // out, out, in, in
                 brcm,function = <1 1 0 0>;
             };
