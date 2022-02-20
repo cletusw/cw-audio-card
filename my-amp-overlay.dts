@@ -9,14 +9,17 @@
         __overlay__ {
             #address-cells = <1>;
             #size-cells = <0>;
+			status = "okay";
 
-            // volume: bd6490fv@40 {
-            //     status = "okay";
-            //     compatible = "ti,bd6490fv";
-            //     reg = <0x40>;
-            //     sound-name-prefix = "vol";
-            // };
+            volume: bd6490fv@40 {
+                compatible = "ti,bd6490fv";
+                reg = <0x40>;
+                status = "okay";
+                sound-name-prefix = "vol";
+            };
 
+			// https://github.com/raspberrypi/linux/blob/rpi-5.10.y/sound/soc/codecs/pcm512x.h
+			// https://github.com/raspberrypi/linux/blob/rpi-5.10.y/sound/soc/codecs/pcm512x.c
             dac: pcm5122@4d {
 				#sound-dai-cells = <0>;
 				compatible = "ti,pcm5122";
@@ -58,12 +61,13 @@
             compatible = "simple-audio-card";
             i2s_controller = <&i2s>;
             status = "okay";
+
             simple-audio-card,name = "cw-audio-card";
             simple-audio-card,format = "i2s";
             simple-audio-card,bitclock-master = <&dailink0_master>;
             simple-audio-card,frame-master = <&dailink0_master>;
 
-            // simple-audio-card,aux-devs = <&volume>;
+            simple-audio-card,aux-devs = <&volume>;
 
             // simple-audio-card,widgets =
             //     "Line", "Aux Jack",

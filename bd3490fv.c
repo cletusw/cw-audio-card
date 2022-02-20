@@ -104,10 +104,10 @@ static const struct snd_soc_dapm_route bd6490fv_routes[] = {
 static const struct snd_soc_component_driver soc_component_dev_bd6490fv = {
 	.controls = bd6490fv_snd_controls,
 	.num_controls = ARRAY_SIZE(bd6490fv_snd_controls),
-	.dapm_widgets = bd6490fv_dapm_widgets,
-	.num_dapm_widgets = ARRAY_SIZE(bd6490fv_dapm_widgets),
-	.dapm_routes = bd6490fv_routes,
-	.num_dapm_routes = ARRAY_SIZE(bd6490fv_routes),
+	// .dapm_widgets = bd6490fv_dapm_widgets,
+	// .num_dapm_widgets = ARRAY_SIZE(bd6490fv_dapm_widgets),
+	// .dapm_routes = bd6490fv_routes,
+	// .num_dapm_routes = ARRAY_SIZE(bd6490fv_routes),
 	.idle_bias_on = 1,
 	.use_pmdown_time= 1,
 	.endianness = 1,
@@ -118,12 +118,8 @@ static bool bd6490fv_readable_register(struct device *dev, unsigned int reg)
 {
 	pr_info("bd6490fv: hw read %d", reg);
 
-	switch (reg) {
-	case BD6490FV_INPUT_SELECTOR ... BD6490FV_VOLR:
-		return true;
-	default:
-		return false;
-	}
+	// BD6490 doesn't allow i2c reads
+	return false;
 }
 
 static bool bd6490fv_writeable_register(struct device *dev, unsigned int reg)
