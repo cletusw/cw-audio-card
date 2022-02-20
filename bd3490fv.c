@@ -17,12 +17,19 @@ MODULE_LICENSE("Dual MIT/GPL");
 #define BD3490FV_VOLR 22
 
 #define BD3490FV_MAX_REGISTER BD3490FV_VOLR
-#define BD3490FV_MAX_VOLUME_VALUE 0xD7	# Inverted so this is actually lowest volume
-#define BD3490FV_MIN_VOLUME_VALUE 0x80	# Inverted so this is actually highest volume
+// TODO: Figure out how to handle mute value, 0xFF
+#define BD3490FV_MAX_VOLUME_VALUE 0xD7	// Inverted, so this is actually lowest volume
+#define BD3490FV_MIN_VOLUME_VALUE 0x80	// Inverted, so this is actually highest volume
 
 /* Private data for the BD3490FV */
 struct bd3490fv_private {
 	struct regmap *regmap;
+};
+
+static const struct reg_default bd3490fv_reg_defaults[] = {
+	{ BD3490FV_INPUT_SELECTOR, 0x07 },
+	{ BD3490FV_VOLL, BD3490FV_MAX_VOLUME_VALUE },
+	{ BD3490FV_VOLR, BD3490FV_MAX_VOLUME_VALUE },
 };
 
 static const DECLARE_TLV_DB_SCALE(volume_tlv, -8700, 100, 0 /* mute = false */);
@@ -141,7 +148,9 @@ static const struct regmap_config bd3490fv_regmap = {
 	.max_register = BD3490FV_MAX_REGISTER,
 	.readable_reg = bd3490fv_readable_register,
 	.writeable_reg = bd3490fv_writeable_register,
-	.cache_type = REGCACHE_NONE,
+	.reg_defaults = bd3490fv_reg_defaults,
+	.num_reg_defaults = ARRAY_SIZE(bd3490fv_reg_defaults),
+	.cache_type = REGCACHE_RBTREE,
 };
 
 static int bd3490fv_i2c_probe(struct i2c_client *client, const struct i2c_device_id *id)
