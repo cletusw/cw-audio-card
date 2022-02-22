@@ -69,16 +69,16 @@
 
             simple-audio-card,aux-devs = <&volume>;
 
-            // simple-audio-card,widgets =
-            //     "Line", "Aux Jack",
-            //     "Speaker", "External Speaker";
-            // simple-audio-card,routing =
-            //     "vol AUXINL", "Aux Jack",
-            //     "vol AUXINR", "Aux Jack",
-            //     "vol DACINL", "dac OUTL",
-            //     "vol DACINR", "dac OUTR",
-            //     "External Speaker", "vol MUXOUTL",
-            //     "External Speaker", "vol MUXOUTR";
+            simple-audio-card,widgets =
+                "Line", "Aux Jack",
+                "Speaker", "External Speaker";
+            simple-audio-card,routing =
+                "vol AUXINL", "Aux Jack",
+                "vol AUXINR", "Aux Jack",
+                "vol DACINL", "dac OUTL",
+                "vol DACINR", "dac OUTR",
+                "External Speaker", "vol MUXOUTL",
+                "External Speaker", "vol MUXOUTR";
 
             pinctrl-names = "default";
             pinctrl-0 = <&amp_gpio>;
