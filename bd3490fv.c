@@ -15,11 +15,15 @@ MODULE_LICENSE("Dual MIT/GPL");
 #define BD3490FV_INPUT_SELECTOR 0x4
 #define BD3490FV_VOLL 0x21
 #define BD3490FV_VOLR 0x22
+#define BD3490FV_RESET 0xFE
 
-#define BD3490FV_MAX_REGISTER BD3490FV_VOLR
+#define BD3490FV_MAX_REGISTER BD3490FV_RESET
+#define BD3490FV_INPUT_SELECTOR_AUX_VALUE 0x00
+#define BD3490FV_INPUT_SELECTOR_DAC_VALUE 0x01
 // TODO: Figure out how to handle mute value, 0xFF
 #define BD3490FV_MAX_VOLUME_VALUE 0xD7	// Inverted, so this is actually lowest volume
 #define BD3490FV_MIN_VOLUME_VALUE 0x80	// Inverted, so this is actually highest volume
+#define BD3490FV_RESET_VALUE 0x81
 
 /* Private data for the BD3490FV */
 struct bd3490fv_private {
@@ -30,6 +34,7 @@ static const struct reg_default bd3490fv_reg_defaults[] = {
 	{ BD3490FV_INPUT_SELECTOR, 0x07 },
 	{ BD3490FV_VOLL, BD3490FV_MAX_VOLUME_VALUE },
 	{ BD3490FV_VOLR, BD3490FV_MAX_VOLUME_VALUE },
+	{ BD3490FV_RESET, 0x00 },
 };
 
 static const DECLARE_TLV_DB_SCALE(volume_tlv, -8700, 100, 0 /* mute = false */);
@@ -69,12 +74,12 @@ static int bd3490fv_dapm_event(struct snd_soc_dapm_widget *w, struct snd_kcontro
 	case SND_SOC_DAPM_PRE_PMU:
 		pr_info("bd3490fv: Change mux to DAC");
 		// pr_info("bd3490fv: To DAC priv %p, regmap %p\n", (void*)bd3490fv, (void*)bd3490fv->regmap);
-		ret = regmap_write(bd3490fv->regmap, BD3490FV_INPUT_SELECTOR, 4);
+		ret = regmap_write(bd3490fv->regmap, BD3490FV_INPUT_SELECTOR, BD3490FV_INPUT_SELECTOR_DAC_VALUE);
 		break;
 	case SND_SOC_DAPM_PRE_PMD:
 		pr_info("bd3490fv: Change mux to AUX");
 		// pr_info("bd3490fv: To AUX priv %p, regmap %p\n", (void*)bd3490fv, (void*)bd3490fv->regmap);
-		ret = regmap_write(bd3490fv->regmap, BD3490FV_INPUT_SELECTOR, 5);
+		ret = regmap_write(bd3490fv->regmap, BD3490FV_INPUT_SELECTOR, BD3490FV_INPUT_SELECTOR_AUX_VALUE);
 		break;
 	}
 	if (ret < 0) {
@@ -134,7 +139,7 @@ static bool bd3490fv_writeable_register(struct device *dev, unsigned int reg)
 	pr_info("bd3490fv: hw write %d", reg);
 
 	switch (reg) {
-	case BD3490FV_INPUT_SELECTOR ... BD3490FV_VOLR:
+	case BD3490FV_INPUT_SELECTOR ... BD3490FV_RESET:
 		return true;
 	default:
 		return false;
@@ -175,6 +180,18 @@ static int bd3490fv_i2c_probe(struct i2c_client *client, const struct i2c_device
 		return_value = PTR_ERR(bd3490fv->regmap);
 		pr_info("bd3490fv: regmap_init() failed with: %d\n", return_value);
 		return return_value;
+	}
+
+	return_value = regmap_write(bd3490fv->regmap, BD3490FV_RESET, BD3490FV_RESET_VALUE);
+	if (return_value < 0) {
+		pr_info("Error performing intial reset: %d\n", return_value);
+		return -EIO;
+	}
+
+	return_value = regmap_write(bd3490fv->regmap, BD3490FV_INPUT_SELECTOR, BD3490FV_INPUT_SELECTOR_AUX_VALUE);
+	if (return_value < 0) {
+		pr_info("Error initializing input to AUX: %d\n", return_value);
+		return -EIO;
 	}
 
 	// pr_info("bd3490fv: Probe priv %p, regmap %p\n", (void*)bd3490fv, (void*)bd3490fv->regmap);
