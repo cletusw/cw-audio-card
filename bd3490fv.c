@@ -11,7 +11,6 @@ MODULE_DESCRIPTION("Implementation of a partial BD3490FV driver");
 MODULE_AUTHOR("Clayton Watts <cletusw@gmail.com>");
 MODULE_LICENSE("Dual MIT/GPL");
 
-// BD3490FV actually uses multiple pages of registers. Here we just assume page 0
 #define BD3490FV_INPUT_SELECTOR 0x4
 #define BD3490FV_VOLL 0x21
 #define BD3490FV_VOLR 0x22
@@ -121,7 +120,7 @@ static const struct snd_soc_component_driver soc_component_dev_bd3490fv = {
 	.dapm_routes = bd3490fv_routes,
 	.num_dapm_routes = ARRAY_SIZE(bd3490fv_routes),
 	.idle_bias_on = 1,
-	.use_pmdown_time= 1,
+	.use_pmdown_time = 1,
 	.endianness = 1,
 	.non_legacy_dai_naming = 1,
 };
@@ -209,7 +208,7 @@ static int bd3490fv_i2c_remove(struct i2c_client *client)
 }
 
 static const struct of_device_id bd3490fv_of_match[] = {
-	{ .compatible = "ti,bd3490fv", },
+	{ .compatible = "rohm,bd3490fv", },
 	{},
 };
 MODULE_DEVICE_TABLE(of, bd3490fv_of_match);

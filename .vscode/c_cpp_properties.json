@@ -3,7 +3,7 @@
         {
             "name": "Linux",
             "includePath": [
-                "/lib/modules/5.10.63-v7l+/build/include/",
+                "/lib/modules/5.10.90-v7+/build/include/",
                 "${workspaceFolder}/**"
             ],
             "defines": [],
