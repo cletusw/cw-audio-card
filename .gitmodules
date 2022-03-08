@@ -1,0 +1,6 @@
+[submodule "bd3490fv-driver"]
+	path = bd3490fv-driver
+	url = git@github.com:cletusw/bd3490fv-driver.git
+[submodule "ma120x0-driver"]
+	path = ma120x0-driver
+	url = git@github.com:cletusw/ma120x0-driver.git

@@ -5,18 +5,33 @@
     compatible = "brcm,bcm2835";
 
     fragment@0 {
+        target = <&i2s>;
+        __overlay__ {
+            status = "okay";
+        };
+    };
+
+    // https://www.kernel.org/doc/Documentation/devicetree/bindings/pinctrl/brcm,bcm2835-gpio.txt
+    fragment@1 {
+        target = <&gpio>;
+        __overlay__ {
+            merus_amp_pins: merus_amp_pins {
+                // !amp_enable !amp_mute
+                brcm,pins = <4 17>;
+                // out, out
+                brcm,function = <1 1>;
+                // pullup, pulldown
+                brcm,pull = <2 1>;
+            };
+        };
+    };
+
+    fragment@2 {
         target = <&i2c1>;
         __overlay__ {
             #address-cells = <1>;
             #size-cells = <0>;
 			status = "okay";
-
-            volume: bd3490fv@40 {
-                compatible = "rohm,bd3490fv";
-                reg = <0x40>;
-                status = "okay";
-                sound-name-prefix = "vol";
-            };
 
 			// https://github.com/raspberrypi/linux/blob/rpi-5.10.y/sound/soc/codecs/pcm512x.h
 			// https://github.com/raspberrypi/linux/blob/rpi-5.10.y/sound/soc/codecs/pcm512x.c
@@ -30,28 +45,30 @@
 				status = "okay";
                 sound-name-prefix = "dac";
 			};
-        };
-    };
 
-    fragment@1 {
-        target = <&i2s>;
-        __overlay__ {
-            status = "okay";
-        };
-    };
-
-    // https://www.kernel.org/doc/Documentation/devicetree/bindings/pinctrl/brcm,bcm2835-gpio.txt
-    fragment@2 {
-        target = <&gpio>;
-        __overlay__ {
-            amp_gpio: amp_gpio {
-                // !amp_enable !amp_mute !amp_error !amp_clip
-                brcm,pins = <4 17 22 27>;
-                // pullup, pulldown, pullup, pullup
-                brcm,pull = <2 1 2 2>;
-                // out, out, in, in
-                brcm,function = <1 1 0 0>;
+            volume: bd3490fv@40 {
+                compatible = "rohm,bd3490fv";
+                reg = <0x40>;
+                status = "okay";
+                sound-name-prefix = "vol";
             };
+
+            merus_amp: ma12070@20 {
+				compatible = "ma,ma120x0";
+				reg = <0x20>;
+				status = "okay";
+
+				pinctrl-names = "default";
+				pinctrl-0 = <&merus_amp_pins>;
+
+                // 0 = "active high" because that's what the driver's expecting,
+                // even though in reality the chip's pins are LOW =
+                // enabled/muted
+                enable_gp-gpios = <&gpio 4 0>;
+				mute_gp-gpios = <&gpio 17 0>;
+
+                sound-name-prefix = "amp";
+			};
         };
     };
 
@@ -67,7 +84,7 @@
             simple-audio-card,bitclock-master = <&dailink0_master>;
             simple-audio-card,frame-master = <&dailink0_master>;
 
-            simple-audio-card,aux-devs = <&volume>;
+            simple-audio-card,aux-devs = <&volume>, <&merus_amp>;
 
             simple-audio-card,widgets =
                 "Line", "Aux Jack",
@@ -77,11 +94,10 @@
                 "vol AUXINR", "Aux Jack",
                 "vol DACINL", "dac OUTL",
                 "vol DACINR", "dac OUTR",
-                "External Speaker", "vol MUXOUTL",
-                "External Speaker", "vol MUXOUTR";
-
-            pinctrl-names = "default";
-            pinctrl-0 = <&amp_gpio>;
+                "amp IN_A", "vol MUXOUTL",
+                "amp IN_B", "vol MUXOUTR",
+                "External Speaker", "amp OUT_A",
+                "External Speaker", "amp OUT_B";
 
             dailink0_master: simple-audio-card,cpu {
                 sound-dai = <&i2s>;
