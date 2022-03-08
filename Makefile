@@ -1,31 +1,18 @@
-TARGET_MODULE:=bd3490fv
-
-ifneq ($(KERNELRELEASE),)
-# kbuild part of makefile
-
-obj-m += $(TARGET_MODULE).o
-
-else
-# normal makefile
-
-KDIR ?= /lib/modules/$(shell uname -r)/build
 # Allows building with sudo
 # See https://sysprog21.github.io/lkmpg/#the-simplest-module
 PWD := $(CURDIR)
 
 default:
-	make -C $(KDIR) M=$(PWD) modules
+	echo "TODO"
 
 clean:
-	make -C $(KDIR) M=$(PWD) clean
+	echo "TODO"
 
 load:
-	insmod ./$(TARGET_MODULE).ko
+	echo "TODO"
 
 unload:
-	rmmod ./$(TARGET_MODULE).ko
+	echo "TODO"
 
-dts: my-amp-overlay.dts
-	dtc -@ -I dts -O dtb -o /boot/overlays/my-amp.dtbo my-amp-overlay.dts
-
-endif
+dts: cw-audio-card-overlay.dts
+	dtc -@ -I dts -O dtb -o /boot/overlays/cw-audio-card.dtbo cw-audio-card-overlay.dts
